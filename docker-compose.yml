@@ -1,0 +1,54 @@
+#version: "3.8"
+services:
+  myinfluxdb:
+    image: influxdb:1.8
+    container_name: myinfluxdb
+    restart: always
+    user: root
+    environment:
+      - INFLUXDB_DB=telegraf
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+    ports:
+      - '8087:8086'
+    volumes:
+      - /var/log:/var/log
+      - ./influxdb/influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./influxdb/data:/var/lib/influxdb
+  telegraf_acx:
+    image: telegraf:latest
+    container_name: mytelegraf
+    restart: always
+    user: root
+    depends_on:
+      - myinfluxdb
+    network_mode: "host" 
+    volumes:
+      - /var/log:/var/log
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+      - ./telegraf/metadata:/var/metadata
+      - ./telegraf/cert:/var/cert
+    command:
+      --config-directory /etc/telegraf/telegraf.d
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: mygrafana
+    restart: always
+    user: root
+    depends_on:
+      - myinfluxdb
+    ports:
+      - '3001:3000'
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/Telegraf_ system dashboard-1727011509340.json
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=yesoreyeram-boomtable-panel
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/cert:/tmp
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/plugins:/var/lib/grafana/plugins
+
