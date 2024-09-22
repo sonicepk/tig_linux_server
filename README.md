@@ -94,7 +94,7 @@ A couple of ways to connect via docker
 
 ## Grafana
    username:password admin:admin   
-   https://localhost:3001   
+   http://localhost:3001   
    You tell grafana how to connect to Influxdb in the provisiong folder: grafana/provisioning/datasources/myinfluxdb.yaml  
    url: http://myinfluxdb:8086   
    Note that you use the hostname of the influxdb docker container(myinfluxdb) as this is inside the same bridge as the Grafana server
